@@ -37,7 +37,7 @@ local questionText
 --the alternate numbers randomly generated
 local correctAnswer
 local alternateAnswer1
-local alternateAnswer2
+local alternateAnswer2   
 local alternateAnswer3    
 
 -- Variables containing the user answer and the actual answer
@@ -70,10 +70,15 @@ local alternateAnswerBox3PreviousX
 -- the black box where the user will drag the answer
 local userAnswerBoxPlaceholder
 
+local lives = 2
+local questionsAnswered = 0
 -- sound effects
+local sound1 = audio.loadSound("Sounds/yeah.mp3")
+local sound2 = audio.loadSound("Sounds/boo.mp3")
 local correctSound
-local booSound
-
+local incorrectSound
+local bkgSound = audio.loadSound("Sounds/YBN.mp3") 
+local bkgSoundChannel
 -----------------------------------------------------------------------------------------
 -- LOCAL FUNCTIONS
 -----------------------------------------------------------------------------------------
@@ -107,15 +112,15 @@ local function DetermineAlternateAnswers()
 
         
     -- generate incorrect answer and set it in the textbox
-    alternateAnswer1 = correctAnswer + math.random(3, 5)
+    alternateAnswer1 = correctAnswer + math.random(1, 2)
     alternateAnswerBox1.text = alternateAnswer1
 
     -- generate incorrect answer and set it in the textbox
-    alternateAnswer2 = correctAnswer - math.random(1, 2)
+    alternateAnswer2 = correctAnswer - math.random(3, 4)
     alternateAnswerBox2.text = alternateAnswer2
 
     -- generate incorrect answer and set it in the textbox
-    alternateAnswer3 = correctAnswer + math.random(6, 9)
+    alternateAnswer3 = correctAnswer - math.random(5, 6)
     alternateAnswerBox3.text = alternateAnswer3
 
 -------------------------------------------------------------------------------------------
@@ -136,21 +141,21 @@ local function PositionAnswers()
     -------------------------------------------------------------------------------------------
     --ROMDOMLY SELECT ANSWER BOX POSITIONS
     -----------------------------------------------------------------------------------------
-    randomPosition = math.random(1,3)
+    randomPosition = math.random(1,4)
 
     -- random position 1
     if (randomPosition == 1) then
         -- set the new y-positions of each of the answers
-        answerbox.y = display.contentHeight * 0.4
-
-        --alternateAnswerBox3
-        alternateAnswerBox3.y = display.contentHeight * 0.25
+        answerbox.y = display.contentHeight * 0.65
 
         --alternateAnswerBox2
-        alternateAnswerBox2.y = display.contentHeight * 0.70
+        alternateAnswerBox2.y = display.contentHeight * 0.5
 
         --alternateAnswerBox1
-        alternateAnswerBox1.y = display.contentHeight * 0.55
+        alternateAnswerBox1.y = display.contentHeight * 0.35
+
+        --alternateAnswerBox3
+        alternateAnswerBox3.y = display.contentHeight * 0.8
 
         ---------------------------------------------------------
         --remembering their positions to return the answer in case it's wrong
@@ -162,16 +167,16 @@ local function PositionAnswers()
     -- random position 2
     elseif (randomPosition == 2) then
 
-        answerbox.y = display.contentHeight * 0.55
-
-        --alternateAnswerBox3
-        alternateAnswerBox3.y = display.contentHeight * 0.25
+        answerbox.y = display.contentHeight * 0.8
         
         --alternateAnswerBox2
-        alternateAnswerBox2.y = display.contentHeight * 0.4
+        alternateAnswerBox2.y = display.contentHeight * 0.65
 
         --alternateAnswerBox1
-        alternateAnswerBox1.y = display.contentHeight * 0.7
+        alternateAnswerBox1.y = display.contentHeight * 0.5
+
+        --alternateAnswerBox3
+        alternateAnswerBox3.y = display.contentHeight * 0.35
 
         --remembering their positions to return the answer in case it's wrong
         alternateAnswerBox1PreviousY = alternateAnswerBox1.y
@@ -180,17 +185,37 @@ local function PositionAnswers()
         answerboxPreviousY = answerbox.y 
 
     -- random position 3
-     elseif (randomPosition == 3) then
-        answerbox.y = display.contentHeight * 0.70
+    elseif (randomPosition == 3) then
 
-        --alternateAnswerBox3
-        alternateAnswerBox3.y = display.contentHeight * 0.25
-
+        answerbox.y = display.contentHeight * 0.35
+        
         --alternateAnswerBox2
-        alternateAnswerBox2.y = display.contentHeight * 0.55
+        alternateAnswerBox2.y = display.contentHeight * 0.8
 
         --alternateAnswerBox1
-        alternateAnswerBox1.y = display.contentHeight * 0.4
+        alternateAnswerBox1.y = display.contentHeight * 0.65
+
+        --alternateAnswerBox3
+        alternateAnswerBox3.y = display.contentHeight * 0.5
+
+        --remembering their positions to return the answer in case it's wrong
+        alternateAnswerBox1PreviousY = alternateAnswerBox1.y
+        alternateAnswerBox2PreviousY = alternateAnswerBox2.y
+        alternateAnswerBox3PreviousY = alternateAnswerBox3.y
+        answerboxPreviousY = answerbox.y 
+
+    -- random position 4
+     elseif (randomPosition == 4) then
+        answerbox.y = display.contentHeight * 0.5
+
+        --alternateAnswerBox2
+        alternateAnswerBox2.y = display.contentHeight * 0.35
+
+        --alternateAnswerBox1
+        alternateAnswerBox1.y = display.contentHeight * 0.8
+
+        --alternateAnswerBox3
+        alternateAnswerBox3.y = display.contentHeight * 0.65
 
         --remembering their positions to return the answer in case it's wrong
         alternateAnswerBox1PreviousY = alternateAnswerBox1.y
@@ -202,8 +227,12 @@ end
 
 -- Transitioning Function to YouWin screen
 local function YouWinTransitionLevel1( )
-    composer.gotoScene("you_win", {effect = "fade", time = 500})
+    composer.gotoScene("you_win", { time = 500})
 end
+-- Function that transitions to Lose Screen
+local function YouLoseTransition( )        
+    composer.gotoScene( "you_lose", { time = 1000})
+end 
 
 -- Function to Restart Level 1
 local function RestartLevel1()
@@ -213,16 +242,39 @@ local function RestartLevel1()
 end
 
 -- Function to Check User Input
-local function CheckUserAnswerInput()
-          
-    timer.performWithDelay(1600, RestartLevel1) 
+local function UserAnswerInputCorrect()
+
+    -- increase number of 
+    questionsAnswered = questionsAnswered + 1
+
+    if (questionsAnswered == 3) then
+
+    timer.performWithDelay(200, YouWinTransitionLevel1)
+    end
+
+    timer.performWithDelay(1000, RestartLevel1) 
+end
+
+-- Function to Check User Input
+local function UserAnswerInputIncorrect()
+    
+    -- decrease number of lives
+    lives = lives - 1
+
+    incorrectSound = audio.play(Sound2)
+
+    if (lives == 0) then
+
+    timer.performWithDelay(200, YouLoseTransition)
+    end
+    timer.performWithDelay(1000, RestartLevel1) 
 end
 
 local function TouchListenerAnswerbox(touch)
     --only work if none of the other boxes have been touched
     if (alternateAnswerBox1AlreadyTouched == false) and 
-        (alternateAnswerBox2AlreadyTouched == false) and
-        (alternateAnswerBox3AlreadyTouched == false) then
+        (alternateAnswerBox2AlreadyTouched == false) and 
+        (alternateAnswerBox3AlreadyTouched == false)  then
 
         if (touch.phase == "began") then
 
@@ -251,8 +303,11 @@ local function TouchListenerAnswerbox(touch)
                 answerbox.y = userAnswerBoxPlaceholder.y
                 userAnswer = correctAnswer
 
+                -- play sound once in the box 
+                correctSound = audio.play(Sound1)
+
                 -- call the function to check if the user's input is correct or not
-                CheckUserAnswerInput()
+                UserAnswerInputCorrect()
 
             --else make box go back to where it was
             else
@@ -266,8 +321,8 @@ end
 local function TouchListenerAnswerBox1(touch)
     --only work if none of the other boxes have been touched
     if (answerboxAlreadyTouched == false) and 
-        (alternateAnswerBox2AlreadyTouched == false) and
-        (alternateAnswerBox3AlreadyTouched == false) then
+        (alternateAnswerBox2AlreadyTouched == false) and 
+        (alternateAnswerBox3AlreadyTouched == false)then
 
         if (touch.phase == "began") then
             --let other boxes know it has been clicked
@@ -289,11 +344,13 @@ local function TouchListenerAnswerBox1(touch)
 
                 alternateAnswerBox1.x = userAnswerBoxPlaceholder.x
                 alternateAnswerBox1.y = userAnswerBoxPlaceholder.y
-
                 userAnswer = alternateAnswer1
 
                 -- call the function to check if the user's input is correct or not
-                CheckUserAnswerInput()
+                UserAnswerInputIncorrect()
+
+                -- Playing sound once its in the box
+                incorrectSound = audio.play(Sound2)
 
             --else make box go back to where it was
             else
@@ -333,7 +390,10 @@ local function TouchListenerAnswerBox2(touch)
                 userAnswer = alternateAnswer2
 
                 -- call the function to check if the user's input is correct or not
-                CheckUserAnswerInput()
+                UserAnswerInputIncorrect()
+
+                -- Playing sound once its in the box
+                incorrectSound = audio.play(Sound2)    
 
             --else make box go back to where it was
             else
@@ -363,17 +423,20 @@ local function TouchListenerAnswerBox3(touch)
             alternateAnswerBox3AlreadyTouched = false
 
             -- if the box is in the userAnswerBox Placeholder  go to center of placeholder
-            if (((userAnswerBoxPlaceholder.x - userAnswerBoxPlaceholder.width/2) < alternateAnswerBox2.x ) and 
-                ((userAnswerBoxPlaceholder.x + userAnswerBoxPlaceholder.width/2) > alternateAnswerBox2.x ) and 
-                ((userAnswerBoxPlaceholder.y - userAnswerBoxPlaceholder.height/2) < alternateAnswerBox2.y ) and 
-                ((userAnswerBoxPlaceholder.y + userAnswerBoxPlaceholder.height/2) > alternateAnswerBox2.y ) ) then
+            if (((userAnswerBoxPlaceholder.x - userAnswerBoxPlaceholder.width/2) < alternateAnswerBox3.x ) and 
+                ((userAnswerBoxPlaceholder.x + userAnswerBoxPlaceholder.width/2) > alternateAnswerBox3.x ) and 
+                ((userAnswerBoxPlaceholder.y - userAnswerBoxPlaceholder.height/2) < alternateAnswerBox3.y ) and 
+                ((userAnswerBoxPlaceholder.y + userAnswerBoxPlaceholder.height/2) > alternateAnswerBox3.y ) ) then
 
                 alternateAnswerBox3.x = userAnswerBoxPlaceholder.x
                 alternateAnswerBox3.y = userAnswerBoxPlaceholder.y
                 userAnswer = alternateAnswer3
 
                 -- call the function to check if the user's input is correct or not
-                CheckUserAnswerInput()
+                UserAnswerInputIncorrect()
+
+                -- Playing sound once its in the box
+                incorrectSound = audio.play(Sound2)
 
             --else make box go back to where it was
             else
@@ -383,6 +446,7 @@ local function TouchListenerAnswerBox3(touch)
         end
     end
 end 
+
 -- Function that Adds Listeners to each answer box
 local function AddAnswerBoxEventListeners()
     answerbox:addEventListener("touch", TouchListenerAnswerbox)
@@ -427,7 +491,7 @@ function scene:create( event )
     bkg_image.height = display.contentHeight
 
     --the text that displays the question
-    questionText = display.newText( "" , 0, 0, nil, 100)
+    questionText = display.newText( "" , 0, 0, nil, 120)
     questionText.x = display.contentWidth * 0.3
     questionText.y = display.contentHeight * 0.9
 
@@ -496,7 +560,8 @@ function scene:show( event )
         -- Insert code here to make the scene come alive.
         -- Example: start timers, begin animation, play audio, etc.
         RestartLevel1()
-        AddAnswerBoxEventListeners() 
+        AddAnswerBoxEventListeners()
+        bkgSoundChannel = audio.play(bkgSound) 
 
     end
 
@@ -523,7 +588,7 @@ function scene:hide( event )
 
     elseif ( phase == "did" ) then
         -- Called immediately after scene goes off screen.
-        audio.stop()
+        audio.stop(bkgSoundChannel)
         RemoveAnswerBoxEventListeners()
     end
 
